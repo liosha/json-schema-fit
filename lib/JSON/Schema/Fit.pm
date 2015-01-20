@@ -113,7 +113,7 @@ Returns "semi-copy" of data structure with adjusted values. Original data is not
 sub get_adjusted {
     my ($self, $struc, $schema, $jpath) = @_;
 
-    return $struc if reftype $schema ne 'HASH';
+    return $struc  if !ref $schema || reftype $schema ne 'HASH';
     my $method = $self->_adjuster_by_type($schema->{type});
     return $struc  if !$method;
     return $self->$method($struc, $schema, $jpath);
