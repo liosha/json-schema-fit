@@ -29,9 +29,19 @@ my @tests = (
         {aa=>0.1, bb=>0.1},
         {aa=>0}
     ],
+    [ { type => 'fruit' }, "apple", "apple" ],
+    [ { type => 'fruit' }, "kiwi", "orange" ],
 );
 
-my $jsa = JSON::Schema::Fit->new();
+my $types = {
+    fruit => sub { 
+        my (undef, $val) = @_;
+        return "orange" unless $val =~ /^apple$/;
+        return $val;
+    }
+};
+
+my $jsa = JSON::Schema::Fit->new( types => $types);
 for my $test ( @tests ) {
     my ($schema, $param, $expected, $name) = @$test;
     cmp_deeply( $jsa->get_adjusted($param, $schema), $expected, $name || to_json($schema) );
