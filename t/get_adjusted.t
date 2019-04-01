@@ -11,6 +11,7 @@ use JSON::Schema::Fit;
 
 my @tests = (
     [ { type => 'boolean' }, 0, JSON::false ],
+    [ { type => 'boolean' }, "false", JSON::false ],
     [ { type => 'boolean' }, {}, JSON::true ],
     [ { type => 'integer', multipleOf => 5 }, 22.3, 20 ],
     [ { type => 'number', multipleOf => 0.01 }, 2/3, 0.67 ],
