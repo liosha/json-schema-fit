@@ -27,6 +27,14 @@ adjusting value type (number/string/boolean),
 rounding numbers,
 filtering hash keys.
 
+=head1 CONSTRUCTOR
+
+=method new
+
+    my $jsf = JSON::Schema::Fit->new(booleans => 0);
+
+Create a new C<JSON::Schema::Fit> instance. See bellow for valid options.
+
 =head1 SEE ALSO
 
 Related modules: L<JSON>, L<JSON::Schema>.
@@ -40,14 +48,12 @@ use strict;
 use warnings;
 use utf8;
 
-use Mouse;
 use Carp;
 
 use JSON;
 use Scalar::Util qw/reftype/;
 use List::Util qw/first/;
 use Math::Round qw/round nearest/;
-
 
 =attr booleans
 
@@ -57,8 +63,7 @@ Default: 1
 
 =cut
 
-has booleans => ( is => 'rw', isa => 'Bool', default => 1 );
-
+sub booleans { return _attr('booleans', @_); }
 
 =attr numbers
 
@@ -68,7 +73,7 @@ Default: 1
 
 =cut
 
-has numbers => ( is => 'rw', isa => 'Bool', default => 1 );
+sub numbers { return _attr('numbers', @_); }
 
 
 =attr round_numbers
@@ -79,7 +84,7 @@ Default: 1
 
 =cut
 
-has round_numbers => ( is => 'rw', isa => 'Bool', default => 1 );
+sub round_numbers { return _attr('round_numbers', @_); }
 
 
 =attr strings
@@ -90,8 +95,7 @@ Default: 1
 
 =cut
 
-has strings => ( is => 'rw', isa => 'Bool', default => 1 );
-
+sub strings { return _attr('strings', @_); }
 
 =attr hash_keys
 
@@ -101,8 +105,30 @@ Default: 1
 
 =cut
 
-has hash_keys => ( is => 'rw', isa => 'Bool', default => 1 );
+sub hash_keys { return _attr('hash_keys', @_); }
 
+# Store valid options as well as default values
+my %valid_option = ( map { ($_ => 1) } qw!booleans numbers round_numbers strings hash_keys! );
+
+sub new { 
+    my ($class, %opts) = @_;
+    my $self = bless {}, $class;
+    for my $k (keys %opts) {
+        next unless exists $valid_option{$k};
+        $self->_attr($k, $opts{$k});
+    }
+    return $self
+}
+
+sub _attr {
+    my ($attr, $self, $val) = @_;
+
+    if ($val) {
+        return $self->{$attr} = $val;
+    } else {
+        return $self->{$attr} //= $valid_option{$attr};
+    }
+}
 
 =method get_adjusted
 
@@ -133,8 +159,8 @@ sub _adjuster_by_type {
 sub _get_adjusted_boolean {
     my ($self, $struc, $schema, $jpath) = @_;
 
-    return $struc  if !$self->booleans();
-    return JSON::true  if $struc;
+    return $struc if !$self->booleans();
+    return JSON::true if $struc;
     return JSON::false;
 }
 
@@ -228,8 +254,6 @@ sub _jpath {
     return $path . "['$key']";
 }
 
-
-__PACKAGE__->meta->make_immutable();
 
 1;
 
