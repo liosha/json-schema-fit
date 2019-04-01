@@ -159,8 +159,8 @@ sub _adjuster_by_type {
 sub _get_adjusted_boolean {
     my ($self, $struc, $schema, $jpath) = @_;
 
-    return $struc  if !$self->booleans();
-    return JSON::true  if $struc && $struc ne "false";
+    return $struc if !$self->booleans();
+    return JSON::true if $struc;
     return JSON::false;
 }
 
