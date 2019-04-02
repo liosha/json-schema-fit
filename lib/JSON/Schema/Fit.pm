@@ -115,16 +115,17 @@ sub new {
     my $self = bless {}, $class;
     for my $k (keys %opts) {
         next unless exists $valid_option{$k};
-        $self->_attr($k, $opts{$k});
+        _attr($k, $self, $opts{$k});
     }
     return $self
 }
 
 sub _attr {
-    my ($attr, $self, $val) = @_;
+    my $attr = shift;
+    my $self = shift;
 
-    if ($val) {
-        return $self->{$attr} = $val;
+    if (@_) {
+        return $self->{$attr} = shift;
     } else {
         return $self->{$attr} //= $valid_option{$attr};
     }
