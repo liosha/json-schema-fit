@@ -86,6 +86,19 @@ Default: 1
 
 sub round_numbers { return _attr('round_numbers', @_); }
 
+=attr limits
+
+Limit numbers accordingly with 'maximum', 'minimum' attributes.
+
+Values outside these limits will be set to the defined in the maximum/minimum
+attributes. 
+
+Default: 1
+
+=cut
+
+sub limits { return _attr('limits', @_); }
+
 
 =attr strings
 
@@ -108,7 +121,7 @@ Default: 1
 sub hash_keys { return _attr('hash_keys', @_); }
 
 # Store valid options as well as default values
-my %valid_option = ( map { ($_ => 1) } qw!booleans numbers round_numbers strings hash_keys! );
+my %valid_option = ( map { ($_ => 1) } qw!limits booleans numbers round_numbers strings hash_keys! );
 
 sub new { 
     my ($class, %opts) = @_;
@@ -181,10 +194,17 @@ sub _get_adjusted_number {
     return $struc  if !$self->numbers();
     my $result = 0+$struc;
 
-    return $result if !$self->round_numbers();
-    my $quantum = $schema->{multipleOf} || $schema->{divisibleBy};
-    return $result if !$quantum;
-    return nearest $quantum, $result;
+    if ($self->round_numbers) {
+        my $quantum = $schema->{multipleOf} || $schema->{divisibleBy};
+        $result = nearest $quantum, $result if $quantum;
+    }
+
+    if ($self->limits) {
+        $result = $schema->{maximum} if exists $schema->{maximum} and $result > $schema->{maximum};
+        $result = $schema->{minimum} if exists $schema->{minimum} and $result < $schema->{minimum};
+    }
+
+    return $result;
 }
 
 
