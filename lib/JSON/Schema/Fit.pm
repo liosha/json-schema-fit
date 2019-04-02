@@ -107,12 +107,28 @@ Default: 1
 
 sub hash_keys { return _attr('hash_keys', @_); }
 
+=attr types
+
+   # fruits can be oranges or apples, only! Oranges by default.
+   $jsf->types( { fruit => sub { 
+        my ($self, $struc, $schema, $jpath) = @_;
+        return "orange" unless $struc =~ /^apple$/; i
+        return $struc;
+   }});
+
+Define user-specific types, like enumerators.
+
+=cut
+
+sub types { return _attr('types', @_); }
+
 # Store valid options as well as default values
-my %valid_option = ( map { ($_ => 1) } qw!booleans numbers round_numbers strings hash_keys! );
+my %valid_option = ( map { ($_ => 1) } qw!booleans numbers round_numbers strings hash_keys!, types => {} );
 
 sub new { 
     my ($class, %opts) = @_;
     my $self = bless {}, $class;
+
     for my $k (keys %opts) {
         next unless exists $valid_option{$k};
         _attr($k, $self, $opts{$k});
@@ -153,6 +169,7 @@ sub _adjuster_by_type {
     return if !$type;
     my $method = "_get_adjusted_$type";
     return $method if $self->can($method);
+    return $self->{types}{$type} if exists $self->{types}{$type} and ref($self->{types}{$type}) eq "CODE";
     return;
 }
 
