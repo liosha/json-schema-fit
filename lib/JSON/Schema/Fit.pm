@@ -86,9 +86,9 @@ Default: 1
 
 sub round_numbers { return _attr('round_numbers', @_); }
 
-=attr limits
+=attr crop_numbers
 
-Limit numbers accordingly with 'maximum', 'minimum' attributes.
+Crop numbers accordingly with 'maximum', 'minimum' attributes.
 
 Values outside these limits will be set to the defined in the maximum/minimum
 attributes. 
@@ -97,7 +97,7 @@ Default: 1
 
 =cut
 
-sub limits { return _attr('limits', @_); }
+sub crop_numbers { return _attr('crop_numbers', @_); }
 
 
 =attr strings
@@ -121,7 +121,7 @@ Default: 1
 sub hash_keys { return _attr('hash_keys', @_); }
 
 # Store valid options as well as default values
-my %valid_option = ( map { ($_ => 1) } qw!limits booleans numbers round_numbers strings hash_keys! );
+my %valid_option = ( map { ($_ => 1) } qw!crop_numbers booleans numbers round_numbers strings hash_keys! );
 
 sub new { 
     my ($class, %opts) = @_;
@@ -199,7 +199,7 @@ sub _get_adjusted_number {
         $result = nearest $quantum, $result if $quantum;
     }
 
-    if ($self->limits) {
+    if ($self->crop_numbers) {
         $result = $schema->{maximum} if exists $schema->{maximum} and $result > $schema->{maximum};
         $result = $schema->{minimum} if exists $schema->{minimum} and $result < $schema->{minimum};
     }
