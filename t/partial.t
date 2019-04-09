@@ -2,12 +2,18 @@
 
 use strict;
 
+use FindBin '$Bin';
+use lib $Bin;
+
 use Test::More;
 use Test::Deep;
-use B;
+use TypeComparator;
 
 use JSON;
 use JSON::Schema::Fit;
+
+*_n = \&TypeComparator::real_number;
+*_s = \&TypeComparator::real_string;
 
 my $schema = {
     type => 'object',
@@ -67,32 +73,3 @@ for my $test ( @tests ) {
 
 
 done_testing();
-
-# copied from JSON::packportPP::_looks_like_number
-sub _is_number {
-    my $value = shift;
-    my $b_obj = B::svref_2object(\$value);
-    my $flags = $b_obj->FLAGS;
-    return 1 if $flags & ( B::SVp_IOK() | B::SVp_NOK() ) and !( $flags & B::SVp_POK() );
-    return;
-}
-
-# real number comparator
-sub _n {
-    my $expected = shift;
-    return code sub {
-        my $got = shift;
-        return (0, "value has string flags") if !_is_number($got);
-        return $got == $expected;
-    };
-}
-
-# real string comparator
-sub _s {
-    my $expected = shift;
-    return code sub {
-        my $got = shift;
-        return (0, "value has number flags") if _is_number($got);
-        return $got eq $expected;
-    };
-}
