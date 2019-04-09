@@ -29,9 +29,13 @@ my @tests = (
         {aa=>0.1, bb=>0.1},
         {aa=>0}
     ],
+
+    [ { type => 'number', minimum => 3, maximum => 6 }, 1 => 3 ],
+    [ { type => 'number', minimum => 3, maximum => 6 }, 5 => 5 ],
+    [ { type => 'number', minimum => 3, maximum => 6 }, 8.22 => 6 ],
 );
 
-my $jsa = JSON::Schema::Fit->new();
+my $jsa = JSON::Schema::Fit->new(clamp_numbers => 1);
 for my $test ( @tests ) {
     my ($schema, $param, $expected, $name) = @$test;
     cmp_deeply( $jsa->get_adjusted($param, $schema), $expected, $name || to_json($schema) );
