@@ -45,7 +45,7 @@ my @tests = (
     ],
 
     [ no_booleans => JSON::Schema::Fit->new(booleans => 0),
-        {aa => 1, bb => _n(20), cc => _n(33.33), dd => _s(77)},
+        {aa => 1, bb => _n(20), cc => _f(33.33), dd => _s(77)},
     ],
     [ no_rounding => JSON::Schema::Fit->new(round_numbers => 0),
         {aa => JSON::true, bb => _n(22), cc => _f(33.333333), dd => _s(77)},
