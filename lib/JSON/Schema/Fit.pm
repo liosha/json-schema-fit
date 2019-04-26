@@ -55,6 +55,7 @@ use Storable;
 use Scalar::Util qw/reftype/;
 use List::Util qw/first/;
 use Math::Round qw/round nearest/;
+use Data::Compare;
 
 =attr booleans
 
@@ -174,9 +175,18 @@ sub get_adjusted {
 
     $struc = _default($schema) if !defined $struc && $self->fill_defaults;
 
+    if ($self->fill_defaults && exists($schema->{enum}) && exists($schema->{default})) {
+        $struc = _default($schema) unless $self->_in_enum($struc, $schema, $jpath);
+    }
+
     my $method = $self->_adjuster_by_type($schema->{type});
     return $struc  if !$method;
     return $self->$method($struc, $schema, $jpath);
+}
+
+sub _in_enum {
+    my ($self, $struc, $schema, $jpath) = @_;
+    return grep { Compare($struc, $_) } @{$schema->{enum}};
 }
 
 
