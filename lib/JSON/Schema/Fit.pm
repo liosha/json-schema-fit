@@ -51,6 +51,7 @@ use utf8;
 use Carp;
 
 use JSON;
+use Storable;
 use Scalar::Util qw/reftype/;
 use List::Util qw/first/;
 use Math::Round qw/round nearest/;
@@ -120,10 +121,23 @@ Default: 1
 
 sub hash_keys { return _attr('hash_keys', @_); }
 
+
+=attr fill_defaults
+
+Fill missing values that have 'default' attribute in schema.
+
+Default: 0
+
+=cut
+
+sub fill_defaults { return _attr('fill_defaults', @_); }
+
+
+
 # Store valid options as well as default values
 my %valid_option =(
     ( map { ($_ => 1) } qw!booleans numbers round_numbers strings hash_keys! ),
-    ( map { ($_ => 0) } qw!clamp_numbers! ),
+    ( map { ($_ => 0) } qw!clamp_numbers fill_defaults! ),
 );
 
 sub new { 
@@ -157,9 +171,21 @@ sub get_adjusted {
     my ($self, $struc, $schema, $jpath) = @_;
 
     return $struc  if !ref $schema || reftype $schema ne 'HASH';
+
+    $struc = _default($schema) if !defined $struc && $self->fill_defaults;
+
     my $method = $self->_adjuster_by_type($schema->{type});
     return $struc  if !$method;
     return $self->$method($struc, $schema, $jpath);
+}
+
+
+sub _default {
+    my ($schema) = @_;
+    return if !exists $schema->{default};
+
+    my $default = $schema->{default};
+    return ref $default ? Storable::dclone($default) : $default;
 }
 
 
@@ -262,6 +288,15 @@ sub _get_adjusted_object {
         }
 
         $result->{$key} = $self->get_adjusted($struc->{$key}, $subschema, $self->_jpath($jpath, $key));
+    }
+
+    if ($self->fill_defaults) {
+        for my $key (keys %$properties) {
+            next if exists $result->{$key};
+            my $subschema = $properties->{$key};
+            next if !exists $subschema->{default};
+            $result->{$key} = _default($subschema);
+        }
     }
 
     return $result;

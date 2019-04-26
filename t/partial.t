@@ -24,6 +24,7 @@ my $schema = {
         bb => { type => 'integer', multipleOf => 5, maximum => 10 },
         cc => { type => 'number', multipleOf => 0.01 },
         dd => { type => 'string' },
+        ee => { type => 'integer', default => 42 },
     },
 };
 
@@ -35,13 +36,16 @@ my $raw_data = {
     _debug => "stacktrace",
 };
 
+my @default_opts = qw/booleans numbers round_numbers strings hash_keys/;
+my @optional_opts = qw/clamp_numbers fill_defaults/;
+
 my @tests = (
     [ default => JSON::Schema::Fit->new(),
         {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77)},
     ],
 
-    [ full => JSON::Schema::Fit->new(clamp_numbers => 1),
-        {aa => JSON::true, bb => _n(10), cc => _f(33.33), dd => _s(77)},
+    [ full => JSON::Schema::Fit->new(map {$_ => 1} @optional_opts),
+        {aa => JSON::true, bb => _n(10), cc => _f(33.33), dd => _s(77), ee => _n(42)},
     ],
 
     [ no_booleans => JSON::Schema::Fit->new(booleans => 0),
@@ -63,8 +67,11 @@ my @tests = (
     [ with_clamp_numbers => JSON::Schema::Fit->new(clamp_numbers => 1),
         {aa => JSON::true, bb => _n(10), cc => _f(33.33), dd => _s(77)},
     ],
+    [ with_fill_defaults => JSON::Schema::Fit->new(fill_defaults => 1),
+        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), ee => _n(42)},
+    ],
 
-    [ disable_all => JSON::Schema::Fit->new(map {$_ => 0} qw/booleans numbers round_numbers strings hash_keys/), $raw_data ],
+    [ disable_all => JSON::Schema::Fit->new(map {$_ => 0} @default_opts), $raw_data ],
 );
 
 for my $test ( @tests ) {
