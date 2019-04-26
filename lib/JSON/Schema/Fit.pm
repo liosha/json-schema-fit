@@ -133,15 +133,26 @@ Default: 0
 
 sub fill_defaults { return _attr('fill_defaults', @_); }
 
+=attr replace_invalid_enum
+
+Check values whose schema have a 'enum' and 'default' attributes in the schema.
+Will replace invalid values by the default value. Will be ignored if no 'default' attribute is present.
+
+Default: 0
+
+=cut
+
+sub replace_invalid_enum { return _attr('replace_invalid_enum', @_); }
+
 
 
 # Store valid options as well as default values
 my %valid_option =(
     ( map { ($_ => 1) } qw!booleans numbers round_numbers strings hash_keys! ),
-    ( map { ($_ => 0) } qw!clamp_numbers fill_defaults! ),
+    ( map { ($_ => 0) } qw!clamp_numbers fill_defaults replace_invalid_enum! ),
 );
 
-sub new { 
+sub new {
     my ($class, %opts) = @_;
     my $self = bless {}, $class;
     for my $k (keys %opts) {
@@ -175,8 +186,8 @@ sub get_adjusted {
 
     $struc = _default($schema) if !defined $struc && $self->fill_defaults;
 
-    if ($self->fill_defaults && exists($schema->{enum}) && exists($schema->{default})) {
-        $struc = _default($schema) unless $self->_in_enum($struc, $schema, $jpath);
+    if ($self->replace_invalid_enum && exists($schema->{enum}) && !$self->_in_enum($struc, $schema) && exists($schema->{default})) {
+        $struc = _default($schema);
     }
 
     my $method = $self->_adjuster_by_type($schema->{type});
@@ -185,7 +196,7 @@ sub get_adjusted {
 }
 
 sub _in_enum {
-    my ($self, $struc, $schema, $jpath) = @_;
+    my ($self, $struc, $schema) = @_;
     return grep { Compare($struc, $_) } @{$schema->{enum}};
 }
 
@@ -268,8 +279,6 @@ sub _get_adjusted_array {
     return $result;
 }
 
-
-
 sub _get_adjusted_object {
     my ($self, $struc, $schema, $jpath) = @_;
 
@@ -318,7 +327,7 @@ sub _jpath {
     $path //= q{$};
 
     return "$path.$key"  if $key =~ /^[_A-Za-z]\w*$/x;
-    
+
     $key =~ s/(['\\])/\\$1/gx;
     return $path . "['$key']";
 }
