@@ -53,9 +53,10 @@ use Carp;
 use JSON;
 use Storable;
 use Scalar::Util qw/reftype/;
-use List::Util qw/first/;
+use List::Util qw/first none/;
 use Math::Round qw/round nearest/;
-use Data::Compare;
+
+
 
 =attr booleans
 
@@ -133,23 +134,23 @@ Default: 0
 
 sub fill_defaults { return _attr('fill_defaults', @_); }
 
-=attr replace_invalid_enum
+=attr replace_invalid_values
 
-Check values whose schema have a 'enum' and 'default' attributes in the schema.
-Will replace invalid values by the default value. Will be ignored if no 'default' attribute is present.
+Replace incompatible with schema values with defaults (if defined).
+For now, only presence in 'enum' is checked.
 
 Default: 0
 
 =cut
 
-sub replace_invalid_enum { return _attr('replace_invalid_enum', @_); }
+sub replace_invalid_values { return _attr('replace_invalid_values', @_); }
 
 
 
 # Store valid options as well as default values
 my %valid_option =(
     ( map { ($_ => 1) } qw!booleans numbers round_numbers strings hash_keys! ),
-    ( map { ($_ => 0) } qw!clamp_numbers fill_defaults replace_invalid_enum! ),
+    ( map { ($_ => 0) } qw!clamp_numbers fill_defaults replace_invalid_values! ),
 );
 
 sub new {
@@ -184,10 +185,13 @@ sub get_adjusted {
 
     return $struc  if !ref $schema || reftype $schema ne 'HASH';
 
-    $struc = _default($schema) if !defined $struc && $self->fill_defaults;
-
-    if ($self->replace_invalid_enum && exists($schema->{enum}) && !$self->_in_enum($struc, $schema) && exists($schema->{default})) {
-        $struc = _default($schema);
+    if (
+        exists $schema->{default} && (
+            !defined $struc && $self->fill_defaults ||
+            $self->replace_invalid_values && !$self->_is_valid($struc, $schema)
+        )
+    ) {
+        return $self->_default_value($schema);
     }
 
     my $method = $self->_adjuster_by_type($schema->{type});
@@ -195,14 +199,23 @@ sub get_adjusted {
     return $self->$method($struc, $schema, $jpath);
 }
 
-sub _in_enum {
+
+sub _is_valid {
     my ($self, $struc, $schema) = @_;
+
+    if (my $enum = $schema->{enum}) {
+        return '' if none {my $v = $_; $struc eq $v} @$enum;
+    }
+
+    return 1;
+
+
     return grep { Compare($struc, $_) } @{$schema->{enum}};
 }
 
 
-sub _default {
-    my ($schema) = @_;
+sub _default_value {
+    my ($self, $schema) = @_;
     return if !exists $schema->{default};
 
     my $default = $schema->{default};
@@ -314,7 +327,7 @@ sub _get_adjusted_object {
             next if exists $result->{$key};
             my $subschema = $properties->{$key};
             next if !exists $subschema->{default};
-            $result->{$key} = _default($subschema);
+            $result->{$key} = $self->_default_value($subschema);
         }
     }
 

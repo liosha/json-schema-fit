@@ -25,8 +25,7 @@ my $schema = {
         cc => { type => 'number', multipleOf => 0.01 },
         dd => { type => 'string' },
         ee => { type => 'integer', default => 42 },
-        ff => { type => 'string', enum => [qw.foo bar zbr ugh.], default => 'foo' },
-        gg => { type => 'string', enum => [qw.0 1 info debug.],  default => 'info' },
+        ff => { type => 'string', enum => [qw.foo bar.], default => 'foo' },
     },
 };
 
@@ -35,8 +34,7 @@ my $raw_data = {
     bb => "22",
     cc => "33.333333",
     dd => 77,
-    ff => 'food',
-    gg => 0,
+    ff => 'qax',
     _debug => "stacktrace",
 };
 
@@ -44,41 +42,41 @@ my $schema_json_before = encode_json $schema, {canonical => 1};
 my $data_json_before = encode_json $raw_data, {canonical => 1};
 
 my @default_opts = qw/booleans numbers round_numbers strings hash_keys/;
-my @optional_opts = qw/clamp_numbers fill_defaults replace_invalid_enum/;
+my @optional_opts = qw/clamp_numbers fill_defaults replace_invalid_values/;
 
 my @tests = (
     [ default => JSON::Schema::Fit->new(),
-        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), ff => "food", gg => "0"},
+        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), ff => "qax"},
     ],
 
     [ full => JSON::Schema::Fit->new(map {$_ => 1} @optional_opts),
-        {aa => JSON::true, bb => _n(10), cc => _f(33.33), dd => _s(77), ee => _n(42), ff => "foo", gg => "0"},
+        {aa => JSON::true, bb => _n(10), cc => _f(33.33), dd => _s(77), ee => _n(42), ff => "foo"},
     ],
 
     [ no_booleans => JSON::Schema::Fit->new(booleans => 0),
-        {aa => 1, bb => _n(20), cc => _f(33.33), dd => _s(77), ff => "food", gg => "0"},
+        {aa => 1, bb => _n(20), cc => _f(33.33), dd => _s(77), ff => "qax"},
     ],
     [ no_rounding => JSON::Schema::Fit->new(round_numbers => 0),
-        {aa => JSON::true, bb => _n(22), cc => _f(33.333333), dd => _s(77), ff => "food", gg => "0"},
+        {aa => JSON::true, bb => _n(22), cc => _f(33.333333), dd => _s(77), ff => "qax"},
     ],
     [ no_numbers => JSON::Schema::Fit->new(numbers => 0),
-        {aa => JSON::true, bb => _s(22), cc => _s(33.333333), dd => _s(77), ff => "food", gg => "0"},
+        {aa => JSON::true, bb => _s(22), cc => _s(33.333333), dd => _s(77), ff => "qax"},
     ],
     [ no_strings => JSON::Schema::Fit->new(strings => 0),
-        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _n(77), ff => "food", gg => "0"},
+        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _n(77), ff => "qax"},
     ],
     [ no_hash_keys => JSON::Schema::Fit->new(hash_keys => 0),
-        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), _debug => "stacktrace", ff => "food", gg => "0"},
+        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), _debug => "stacktrace", ff => "qax"},
     ],
 
     [ with_clamp_numbers => JSON::Schema::Fit->new(clamp_numbers => 1),
-        {aa => JSON::true, bb => _n(10), cc => _f(33.33), dd => _s(77), ff => "food", gg => "0"},
+        {aa => JSON::true, bb => _n(10), cc => _f(33.33), dd => _s(77), ff => "qax"},
     ],
     [ with_fill_defaults => JSON::Schema::Fit->new(fill_defaults => 1),
-        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), ee => _n(42), ff => "food", gg => "0"},
+        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), ee => _n(42), ff => "qax"},
     ],
-    [ with_replace_invalid_enum => JSON::Schema::Fit->new(replace_invalid_enum => 1),
-        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), ff => "foo", gg => "0"},
+    [ with_replace_invalid_values => JSON::Schema::Fit->new(replace_invalid_values => 1),
+        {aa => JSON::true, bb => _n(20), cc => _f(33.33), dd => _s(77), ff => "foo"},
     ],
 
     [ disable_all => JSON::Schema::Fit->new(map {$_ => 0} @default_opts), $raw_data ],
