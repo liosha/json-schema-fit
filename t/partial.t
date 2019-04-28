@@ -40,6 +40,9 @@ my $raw_data = {
     _debug => "stacktrace",
 };
 
+my $schema_json_before = encode_json $schema, {canonical => 1};
+my $data_json_before = encode_json $raw_data, {canonical => 1};
+
 my @default_opts = qw/booleans numbers round_numbers strings hash_keys/;
 my @optional_opts = qw/clamp_numbers fill_defaults replace_invalid_enum/;
 
@@ -86,5 +89,11 @@ for my $test ( @tests ) {
     cmp_deeply $jsf->get_adjusted($raw_data, $schema), $expected, $name;
 }
 
+
+my $schema_json_after = encode_json $schema, {canonical => 1};
+is $schema_json_after, $schema_json_before, 'schema left intact';
+
+my $data_json_after = encode_json $raw_data, {canonical => 1};
+is $data_json_after, $data_json_before, 'original data left intact';
 
 done_testing();
