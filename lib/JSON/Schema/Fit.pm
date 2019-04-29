@@ -53,7 +53,7 @@ use Carp;
 use JSON;
 use Storable;
 use Scalar::Util qw/reftype/;
-use List::Util qw/first none/;
+use List::Util 1.33 qw/first none/;
 use Math::Round qw/round nearest/;
 
 
